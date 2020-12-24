@@ -65,7 +65,7 @@ Program parse(std::istream &stream) {
       size_t saved_i = i;
 
       while (bracket_nesting && i > 0) {
-          --i;
+        --i;
         if (s[i] == ']') {
           bracket_nesting++;
         } else if (s[i] == '[') {
@@ -253,7 +253,7 @@ std::vector<JitOP *> jitEmiter(const Parser::Program &p) {
       ip = calcualteAndPushRelativeAddress((void *)&comma, ptr, ip);
       POP_RBP();
       break;
-    case '[': 
+    case '[':
       // Jump location will be filled in during next pass.
       RET();
       ret.push_back(new JitOP{.type = 'j', .jitedBlock = (void (*)())ptr});
@@ -262,7 +262,7 @@ std::vector<JitOP *> jitEmiter(const Parser::Program &p) {
       ip = 0;
       ptr = (uint8_t *)alloc_executable_memory(4096);
       break;
-    case ']': 
+    case ']':
       RET();
       ret.push_back(new JitOP{.type = 'j', .jitedBlock = (void (*)())ptr});
       ret.push_back(new JitOP{.type = ']'});
@@ -273,13 +273,10 @@ std::vector<JitOP *> jitEmiter(const Parser::Program &p) {
     }
     ++pc;
   }
-  if (ip != 0) {
-    // pack and finish the last jit block
-    // The whole jit block will be treated as a giant function itself
-    // So we need to add a ret instruction.
-    RET();
-    ret.push_back(new JitOP{.type = 'j', .jitedBlock = (void (*)())ptr});
-  }
+
+  // pack and finish the last jit block
+  RET();
+  ret.push_back(new JitOP{.type = 'j', .jitedBlock = (void (*)())ptr});
 
   // Make up the missing jump address.
   pc = 0;
@@ -301,6 +298,7 @@ std::vector<JitOP *> jitEmiter(const Parser::Program &p) {
         op->address = pc;
         ret[pc]->address = saved_pc;
       }
+      pc = saved_pc;
     }
     }
     ++pc;
