@@ -9,7 +9,8 @@ int main(int argc, char **argv) {
     } else if (std::string(argv[1]) == "--jit") {
       jit::jitExecute(argv[2]);
     }
+    return 0;
   }
-  std::cerr << "./main --interpreter/--jit target\n";
+  std::cerr << "./bf --interpreter/--jit target_file\n";
   return -1;
 }
