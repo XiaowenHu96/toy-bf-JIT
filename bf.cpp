@@ -11,12 +11,12 @@
 #include <sys/mman.h>
 #include <vector>
 
+namespace Parser {
 // One small modification I did for BF is to use direct jump for [ and ].
 // (In contrast to looking for the next ] or [ one by one)
 // This is because interpreter and JIT has different length of instructions.
 // Therefore, using direct jump can eliminate the performance difference
 // and make our benchmark more precise.
-namespace Parser {
 struct Op {
   char type;
   size_t address;
@@ -28,6 +28,7 @@ struct Program {
 Program parse(std::istream &stream) {
   Program program;
   std::string s;
+  // First parse eliminate comment
   for (std::string line; std::getline(stream, line);) {
     for (auto c : line) {
       if (c == '>' || c == '<' || c == '+' || c == '-' || c == '.' ||
@@ -36,7 +37,7 @@ Program parse(std::istream &stream) {
       }
     }
   }
-
+  // Second parse generate opcode
   for (size_t i = 0; i < s.size(); ++i) {
     char c = s[i];
     if (c == '>' || c == '<' || c == '+' || c == '-' || c == '.' || c == ',') {
@@ -85,6 +86,7 @@ Program parse(std::istream &stream) {
 
 }; // namespace Parser
 
+// No magic in the interpreter.
 namespace interpreter {
 constexpr int MEMORY_SIZE = 30000;
 
@@ -141,6 +143,8 @@ namespace jit {
 // For jit, we do not rely on switch dispatch, instead, we use JIT to generate
 // 'call' instructions to glue the program together.
 // This technique is known as subroutine threading.
+
+// Return an executable page.
 void *alloc_executable_memory(size_t size) {
   void *ptr = mmap(0, size, PROT_READ | PROT_WRITE | PROT_EXEC,
                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -150,6 +154,8 @@ void *alloc_executable_memory(size_t size) {
   }
   return ptr;
 }
+
+// Global data
 constexpr int MEMORY_SIZE = 30000;
 size_t dataptr = 0;
 std::vector<uint8_t> memory(MEMORY_SIZE, 0);
@@ -176,10 +182,10 @@ void comma() { memory[dataptr] = std::cin.get(); }
 struct JitOP {
   char type;
   size_t address;
-  void (*jitedBlock)();
+  void (*jitBlock)();
 };
 
-// Some basic marco
+// Some basic Macro
 #define PUSH_RBP() ptr[ip++] = 0x55
 #define MOV_RSP_RBP()                                                          \
   ptr[ip++] = 0x48;                                                            \
@@ -188,10 +194,20 @@ struct JitOP {
 #define POP_RBP() ptr[ip++] = 0x5d
 #define CALL() ptr[ip++] = 0xe8
 #define RET() ptr[ip++] = 0xc3
+#define GEN_CALL_TO(func)                                                      \
+  PUSH_RBP();                                                                  \
+  MOV_RSP_RBP();                                                               \
+  CALL();                                                                      \
+  ip = calcualteAndPushRelativeAddress((void *)&func, ptr, ip);                \
+  POP_RBP();
+
 // One of the main challenge in calling a function is to calcualte the relative
 // address.
 size_t calcualteAndPushRelativeAddress(void *targetFunc, void *ptr, size_t ip) {
   uint8_t *currentIP = (uint8_t *)ptr + ip;
+  // Note here, this is how the page look like: call 0x00 0x00 0x00 0x00
+  // The ptr point to the byte after call.
+  // Therefore, Relative address = target - (current + 4)
   long relativeAddress = ((uint8_t *)targetFunc - (uint8_t *)currentIP) - 4;
   // Translate it into little endian?
   ((uint8_t *)ptr)[ip++] = (uint8_t)relativeAddress;
@@ -212,51 +228,30 @@ std::vector<JitOP *> jitEmiter(const Parser::Program &p) {
     auto *op = p.instructions[pc];
     switch (op->type) {
     case '>':
-      PUSH_RBP();
-      MOV_RSP_RBP();
-      CALL();
-      ip = calcualteAndPushRelativeAddress((void *)&gt, ptr, ip);
-      POP_RBP();
+      GEN_CALL_TO(gt);
       break;
     case '<':
-      PUSH_RBP();
-      MOV_RSP_RBP();
-      CALL();
-      ip = calcualteAndPushRelativeAddress((void *)&lt, ptr, ip);
-      POP_RBP();
+      GEN_CALL_TO(lt);
       break;
     case '+':
-      PUSH_RBP();
-      MOV_RSP_RBP();
-      CALL();
-      ip = calcualteAndPushRelativeAddress((void *)&plus, ptr, ip);
-      POP_RBP();
+      GEN_CALL_TO(plus);
+      break;
       break;
     case '-':
-      PUSH_RBP();
-      MOV_RSP_RBP();
-      CALL();
-      ip = calcualteAndPushRelativeAddress((void *)&minus, ptr, ip);
-      POP_RBP();
+      GEN_CALL_TO(minus);
       break;
     case '.':
-      PUSH_RBP();
-      MOV_RSP_RBP();
-      CALL();
-      ip = calcualteAndPushRelativeAddress((void *)&dot, ptr, ip);
-      POP_RBP();
+      GEN_CALL_TO(dot);
       break;
     case ',':
-      PUSH_RBP();
-      MOV_RSP_RBP();
-      CALL();
-      ip = calcualteAndPushRelativeAddress((void *)&comma, ptr, ip);
-      POP_RBP();
+      GEN_CALL_TO(comma);
       break;
     case '[':
-      // Jump location will be filled in during next pass.
+      // Pack the current block.
       RET();
-      ret.push_back(new JitOP{.type = 'j', .jitedBlock = (void (*)())ptr});
+      ret.push_back(new JitOP{.type = 'j', .jitBlock = (void (*)())ptr});
+      // Generate jump, address is empty now, will be filled during next pass.
+      // just for the sake of simplicity.
       ret.push_back(new JitOP{.type = '['});
       // Clean up.
       ip = 0;
@@ -264,7 +259,7 @@ std::vector<JitOP *> jitEmiter(const Parser::Program &p) {
       break;
     case ']':
       RET();
-      ret.push_back(new JitOP{.type = 'j', .jitedBlock = (void (*)())ptr});
+      ret.push_back(new JitOP{.type = 'j', .jitBlock = (void (*)())ptr});
       ret.push_back(new JitOP{.type = ']'});
       // Clean up.
       ip = 0;
@@ -276,7 +271,7 @@ std::vector<JitOP *> jitEmiter(const Parser::Program &p) {
 
   // pack and finish the last jit block
   RET();
-  ret.push_back(new JitOP{.type = 'j', .jitedBlock = (void (*)())ptr});
+  ret.push_back(new JitOP{.type = 'j', .jitBlock = (void (*)())ptr});
 
   // Make up the missing jump address.
   pc = 0;
@@ -306,6 +301,7 @@ std::vector<JitOP *> jitEmiter(const Parser::Program &p) {
   return ret;
 }
 
+// The actual engine to execute the jited code.
 void jitEngine(const std::vector<JitOP *> p) {
   // Initialize state.
   size_t pc = 0;
@@ -314,7 +310,7 @@ void jitEngine(const std::vector<JitOP *> p) {
     auto *op = p[pc];
     switch (op->type) {
     case 'j':
-      op->jitedBlock();
+      op->jitBlock();
       break;
     case '[':
       if (memory[dataptr] == 0) {
