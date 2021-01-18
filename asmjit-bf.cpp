@@ -4,13 +4,13 @@
 #include <fstream>
 
 namespace AsmJIT {
+// JitRuntime must be alive the whole time.
+asmjit::JitRuntime rt;
 
 // Global data
 constexpr int MEMORY_SIZE = 30000;
 size_t dataptr = 0;
 std::vector<uint8_t> memory(MEMORY_SIZE, 0);
-// JitRuntime must be alive the whole time.
-asmjit::JitRuntime rt;
 // Wrap instruction with function, later generate machine code to call them
 // >
 void gt() { dataptr++; }
@@ -43,6 +43,13 @@ void finishBlock(asmjit::x86::Compiler &cc) {
   cc.finalize();
 }
 
+void initCodeBlock(asmjit::ColdHolder &code, asmjit::x86::Compiler &cc) {
+  code.reset();
+  code.init(rt.environment());
+  code.attach(&cc);
+  cc.addFunc(asmjit::FuncSignatureT<void>());
+}
+
 std::vector<JitOP *> jitEmiter(const Parser::Program &p) {
   // Initialize state.
   size_t pc = 0;
@@ -50,9 +57,8 @@ std::vector<JitOP *> jitEmiter(const Parser::Program &p) {
 
   // asmjit
   asmjit::CodeHolder code;
-  code.init(rt.environment());
-  asmjit::x86::Compiler cc(&code);
-  cc.addFunc(asmjit::FuncSignatureT<void>());
+  asmjit::x86::Compiler cc;
+  initCodeBlock(code, cc);
 
   while (pc < p.instructions.size()) {
     auto *op = p.instructions[pc];
@@ -86,10 +92,7 @@ std::vector<JitOP *> jitEmiter(const Parser::Program &p) {
       // just for the sake of simplicity.
       ret.push_back(new JitOP{.type = '['});
       // Clean up.
-      code.reset();
-      code.init(rt.environment());
-      code.attach(&cc);
-      cc.addFunc(asmjit::FuncSignatureT<void>());
+      initCodeBlock(code, cc);
       break;
     }
     case ']': {
@@ -100,10 +103,7 @@ std::vector<JitOP *> jitEmiter(const Parser::Program &p) {
 
       ret.push_back(new JitOP{.type = ']'});
       // Clean up.
-      code.reset();
-      code.init(rt.environment());
-      code.attach(&cc);
-      cc.addFunc(asmjit::FuncSignatureT<void>());
+      initCodeBlock(code, cc);
       break;
     }
     }
