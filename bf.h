@@ -1,7 +1,7 @@
 #include <string>
-namespace interpreter {
+namespace Interpreter {
 void interpreterExecute(std::string fileName);
 };
-namespace jit {
+namespace JIT {
 void jitExecute(std::string fileName);
 };

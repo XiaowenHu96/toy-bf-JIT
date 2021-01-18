@@ -87,7 +87,7 @@ Program parse(std::istream &stream) {
 }; // namespace Parser
 
 // No magic in the interpreter.
-namespace interpreter {
+namespace Interpreter {
 constexpr int MEMORY_SIZE = 30000;
 
 void basicInterpreter(const Parser::Program &p) {
@@ -139,7 +139,7 @@ void interpreterExecute(std::string fileName) {
 }
 } // namespace interpreter
 
-namespace jit {
+namespace JIT {
 // For jit, we do not rely on switch dispatch, instead, we use JIT to generate
 // 'call' instructions to glue the program together.
 // This technique is known as subroutine threading.

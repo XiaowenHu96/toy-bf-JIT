@@ -5,9 +5,9 @@
 int main(int argc, char **argv) {
   if (argc >= 3) {
     if (std::string(argv[1]) == "--interpreter") {
-      interpreter::interpreterExecute(argv[2]);
+      Interpreter::interpreterExecute(argv[2]);
     } else if (std::string(argv[1]) == "--jit") {
-      jit::jitExecute(argv[2]);
+      JIT::jitExecute(argv[2]);
     }
     return 0;
   }
