@@ -8,9 +8,11 @@ int main(int argc, char **argv) {
       Interpreter::interpreterExecute(argv[2]);
     } else if (std::string(argv[1]) == "--jit") {
       JIT::jitExecute(argv[2]);
+    } else if (std::string(argv[1]) == "--asmjit") {
+      AsmJIT::jitExecute(argv[2]);
     }
     return 0;
   }
-  std::cerr << "./bf --interpreter/--jit target_file\n";
+  std::cerr << "./bf --interpreter/--jit/--asmjit target_file\n";
   return -1;
 }

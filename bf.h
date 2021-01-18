@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <fstream>
 #include <iostream>
 
 namespace Interpreter {
@@ -19,6 +20,9 @@ namespace Parser {
       std::vector<Op *> instructions;
     };
 
-
     Program parse(std::istream &stream);
-}; // namespace Parser
+}; 
+
+namespace AsmJIT {
+    void jitExecute(std::string fileName);
+};

@@ -1,3 +1,6 @@
+asmjit: bf.cpp main.cpp asmjit-bf.cpp
+	g++ -o bf bf.cpp main.cpp asmjit-bf.cpp bf.h -I./asmjit/src/ -DASMJIT_STATIC -lasmjit -L./asmjit -Wl,-rpath ./asmjit
+
 bf: bf.cpp main.cpp
 	g++ -o bf bf.cpp main.cpp bf.h -m32
 
