@@ -17,13 +17,6 @@ namespace Parser {
 // This is because interpreter and JIT has different length of instructions.
 // Therefore, using direct jump can eliminate the performance difference
 // and make our benchmark more precise.
-struct Op {
-  char type;
-  size_t address;
-};
-struct Program {
-  std::vector<Op *> instructions;
-};
 
 Program parse(std::istream &stream) {
   Program program;
