@@ -196,6 +196,7 @@ struct JitOP {
 
 // One of the main challenge in calling a function is to calcualte the relative
 // address.
+// Only works for 32bit program, see readme for more.
 size_t calcualteAndPushRelativeAddress(void *targetFunc, void *ptr, size_t ip) {
   uint8_t *currentIP = (uint8_t *)ptr + ip;
   // Note here, this is how the page look like: call 0x00 0x00 0x00 0x00

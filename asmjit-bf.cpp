@@ -43,7 +43,7 @@ void finishBlock(asmjit::x86::Compiler &cc) {
   cc.finalize();
 }
 
-void initCodeBlock(asmjit::ColdHolder &code, asmjit::x86::Compiler &cc) {
+void initCodeBlock(asmjit::CodeHolder &code, asmjit::x86::Compiler &cc) {
   code.reset();
   code.init(rt.environment());
   code.attach(&cc);
