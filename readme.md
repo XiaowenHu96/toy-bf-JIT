@@ -7,7 +7,8 @@ However, the factor benchmark is good enough to show the difference.
 Tested on: Manjaro Linux x86_64 with Intel i5-8600 (6) @ 4.300GHz.
 
 TODO:
-- [X] Extend native JIT with 64bit machine. Edited: All to 32 bit now.
+- [X] Extend native JIT with 64bit machine. 
+    * Edited: All to 32 bit now.
     Native subroutine threading with 64bit can not be easily done. 
     Basically, we need to allocate page nearby so that the relative address can
     be expressed in `JUMP REL32`. But the process is tedious and not worth to
