@@ -1,0 +1,19 @@
+Performing C++ SOURCE FILE Test __CxxFlag__m32 failed with the following output:
+Change Dir: /home/xiaowen/WorkSpace/toy-bf-JIT/asmjit/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_bde80/fast && /usr/bin/make  -f CMakeFiles/cmTC_bde80.dir/build.make CMakeFiles/cmTC_bde80.dir/build
+make[1]: Entering directory '/home/xiaowen/WorkSpace/toy-bf-JIT/asmjit/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_bde80.dir/src.cxx.o
+/usr/bin/c++ -D__CxxFlag__m32  -m32 -o CMakeFiles/cmTC_bde80.dir/src.cxx.o -c /home/xiaowen/WorkSpace/toy-bf-JIT/asmjit/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_bde80
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bde80.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_bde80.dir/src.cxx.o -o cmTC_bde80 
+/usr/bin/ld: i386 architecture of input file `CMakeFiles/cmTC_bde80.dir/src.cxx.o' is incompatible with i386:x86-64 output
+collect2: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_bde80.dir/build.make:106: cmTC_bde80] Error 1
+make[1]: Leaving directory '/home/xiaowen/WorkSpace/toy-bf-JIT/asmjit/CMakeFiles/CMakeTmp'
+make: *** [Makefile:140: cmTC_bde80/fast] Error 2
+
+
+Source file was:
+int main() { return 0; }
