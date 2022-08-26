@@ -1,8 +1,8 @@
 bf: bf.cpp main.cpp asmjit-bf.cpp ./asmjit/libasmjit.a
-	g++ -m32 -o bf bf.cpp main.cpp asmjit-bf.cpp bf.h -I./asmjit/src/ -DASMJIT_STATIC -lrt ./asmjit/libasmjit.a
+	g++ -m32 -o bf bf.cpp main.cpp asmjit-bf.cpp bf.h -I./asmjit/src/ ./asmjit/libasmjit.a
 
 ./asmjit/libasmjit.a: 
-	cd asmjit && cmake -DCMAKE_CXX_FLAGS:STRING=-m32 _DASMJTI_STATIC=TRUE CMakeLists.txt && make
+	cd asmjit && cmake -DCMAKE_CXX_FLAGS:STRING=-m32 -DASMJIT_STATIC=TRUE && make -j
 
 debug: bf.cpp main.cpp
 	g++ -o bf bf.cpp main.cpp bf.h -g -m32
